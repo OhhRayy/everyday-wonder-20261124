@@ -20,7 +20,7 @@ ENTRY_LINE = (
 )
 
 
-def validate_entry(text: str) -> str:
+def validate(text: str) -> str:
     """Gate: entry must be 1-200 chars, one clean line, no hidden controls."""
     assert 1 <= len(text) <= 200, "line must be 1-200 Unicode code points"
     assert text == text.strip(), "line must have no leading/trailing whitespace"
@@ -32,6 +32,15 @@ def validate_entry(text: str) -> str:
     return text
 
 
+def write_entry(text: str, path: str) -> None:
+    """Write the validated line to path and verify the round-trip."""
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        f.write(text)
+    with open(path, encoding="utf-8", newline="") as f:
+        assert f.read() == text, "written entry.txt differs from the line"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -39,10 +48,7 @@ def main() -> None:
         help="path of the entry file to write (default: /output/entry.txt)",
     )
     args = parser.parse_args()
-    text = validate_entry(ENTRY_LINE)
-    os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
-    with open(args.output, "w", encoding="utf-8", newline="") as f:
-        f.write(text)
+    write_entry(validate(ENTRY_LINE), args.output)
 
 
 if __name__ == "__main__":
